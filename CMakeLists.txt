@@ -108,28 +108,36 @@ link_directories(${GLIB_LIBDIR})
 #= python3
 #-------------------------------------------------------------------------------
 
-find_package(Python3 COMPONENTS Development QUIET)
-
-if (Python3_FOUND)
-	message("----- python3:")
-	message(STATUS "	 includes:" ${Python3_INCLUDE_DIRS})
-	message(STATUS "	 libraries:" ${Python3_LIBRARIES})
+if (WIN32)
+	# use python in ${CMAKE_SOURCE_DIR}/python
+	set(PY_LIB ${CMAKE_SOURCE_DIR}/python/python311.dll)
+	find_package(Python3 COMPONENTS Development QUIET)
 	include_directories(${Python3_INCLUDE_DIRS})
-	set(PY_LIB ${Python3_LIBRARIES})
 else()
-     find_package(PythonLibs 3 QUIET)
 
-     if(PYTHONLIBS_FOUND)
-     	message("----- python(${PYTHONLIBS_VERSION_STRING}):")
-	message(STATUS "	 includes:" ${PYTHON_INCLUDE_DIRS})
-	message(STATUS "	 libraries:" ${PYTHON_LIBRARIES})
-	include_directories(${PYTHON_INCLUDE_DIRS})
-	set(PY_LIB ${PYTHON_LIBRARIES})
-     else()
-     	message(FATAL_ERROR  "Please install lib python3!")
-     endif()
+	find_package(Python3 COMPONENTS Development QUIET)
+
+	if (Python3_FOUND)
+		message("----- python3:")
+		message(STATUS "	 includes:" ${Python3_INCLUDE_DIRS})
+		message(STATUS "	 libraries:" ${Python3_LIBRARIES})
+		include_directories(${Python3_INCLUDE_DIRS})
+		set(PY_LIB ${Python3_LIBRARIES})
+	else()
+		find_package(PythonLibs 3 QUIET)
+
+		if(PYTHONLIBS_FOUND)
+			message("----- python(${PYTHONLIBS_VERSION_STRING}):")
+		message(STATUS "	 includes:" ${PYTHON_INCLUDE_DIRS})
+		message(STATUS "	 libraries:" ${PYTHON_LIBRARIES})
+		include_directories(${PYTHON_INCLUDE_DIRS})
+		set(PY_LIB ${PYTHON_LIBRARIES})
+		else()
+			message(FATAL_ERROR  "Please install lib python3!")
+		endif()
+	endif()
 endif()
-  
+
 #===============================================================================
 #= FFTW
 #-------------------------------------------------------------------------------
@@ -184,14 +192,15 @@ if(Qt5Core_FOUND)
 	#find_package(Qt5WinExtras REQUIRED)
 	find_package(Qt5Widgets REQUIRED)
 	find_package(Qt5Gui REQUIRED)
+	find_package(Qt5Svg REQUIRED)
 	# win32
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
 	if (WIN32)
 		find_package(Qt5WinExtras REQUIRED)
 		message(STATUS "	 libraries:" ${Qt5WinExtras_LIBRARIES})
-		set(QT_INCLUDE_DIRS ${Qt5Gui_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS} ${Qt5WinExtras_INCLUDE_DIRS})
-		set(QT_LIBRARIES Qt5::Gui Qt5::Widgets Qt5::WinExtras)
-		add_definitions(${Qt5Gui_DEFINITIONS} ${Qt5Widgets_DEFINITIONS} ${Qt5WinExtras_DEFINITIONS})
+		set(QT_INCLUDE_DIRS ${Qt5Gui_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS} ${Qt5WinExtras_INCLUDE_DIRS} ${Qt5Svg_INCLUDE_DIRS})
+		set(QT_LIBRARIES Qt5::Gui Qt5::Widgets Qt5::WinExtras Qt5::Svg)
+		add_definitions(${Qt5Gui_DEFINITIONS} ${Qt5Widgets_DEFINITIONS} ${Qt5WinExtras_DEFINITIONS}  ${Qt5Svg_DEFINITIONS} )
 	else()
 		set(QT_INCLUDE_DIRS ${Qt5Gui_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS})
 		set(QT_LIBRARIES Qt5::Gui Qt5::Widgets)
