@@ -1,0 +1,15 @@
+#ifndef _DSVIEW_CONFIG_H
+#define _DSVIEW_CONFIG_H
+
+// cmake config with #cmakedefine
+#define DS_TITLE "@DS_TITLE@"
+#define DS_DESCRIPTION "@DS_DESCRIPTION@"
+#define DS_BIN_NAME "DSView"
+
+
+#define DS_VERSION_MAJOR @DS_VERSION_MAJOR@
+#define DS_VERSION_MINOR @DS_VERSION_MINOR@
+#define DS_VERSION_MICRO @DS_VERSION_MICRO@
+#define DS_VERSION_STRING "@DS_VERSION_STRING@"
+
+#endif

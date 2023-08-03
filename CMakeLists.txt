@@ -37,7 +37,7 @@ set(DS_VERSION_STRING  ${DS_VERSION_MAJOR}.${DS_VERSION_MINOR}.${DS_VERSION_MICR
 
 configure_file (
 	${PROJECT_SOURCE_DIR}/DSView/src/config.h.in
-	${PROJECT_BINARY_DIR}/DSView/src/config.h
+	${PROJECT_SOURCE_DIR}/DSView/src/config.h
 )
 
 #===============================================================================
@@ -184,12 +184,21 @@ if(Qt5Core_FOUND)
 	#find_package(Qt5WinExtras REQUIRED)
 	find_package(Qt5Widgets REQUIRED)
 	find_package(Qt5Gui REQUIRED)
+	# win32
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
+	if (WIN32)
+		find_package(Qt5WinExtras REQUIRED)
+		message(STATUS "	 libraries:" ${Qt5WinExtras_LIBRARIES})
+		set(QT_INCLUDE_DIRS ${Qt5Gui_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS} ${Qt5WinExtras_INCLUDE_DIRS})
+		set(QT_LIBRARIES Qt5::Gui Qt5::Widgets Qt5::WinExtras)
+		add_definitions(${Qt5Gui_DEFINITIONS} ${Qt5Widgets_DEFINITIONS} ${Qt5WinExtras_DEFINITIONS})
+	else()
+		set(QT_INCLUDE_DIRS ${Qt5Gui_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS})
+		set(QT_LIBRARIES Qt5::Gui Qt5::Widgets)
+		add_definitions(${Qt5Gui_DEFINITIONS} ${Qt5Widgets_DEFINITIONS})
+	endif()
 	#set(QT_INCLUDE_DIRS ${Qt5Gui_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS} ${Qt5WinExtras_INCLUDE_DIRS})
 	#set(QT_LIBRARIES Qt5::Gui Qt5::Widgets Qt5::WinExtras)
-	set(QT_INCLUDE_DIRS ${Qt5Gui_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS})
-	set(QT_LIBRARIES Qt5::Gui Qt5::Widgets)
-	add_definitions(${Qt5Gui_DEFINITIONS} ${Qt5Widgets_DEFINITIONS})
 else()
 	find_package(Qt6Core QUIET)
 endif()
