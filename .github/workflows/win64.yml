@@ -10,7 +10,7 @@ jobs:
     runs-on: windows-2019
     defaults:
       run:
-        shell: mingw64 {0}
+        shell: msys2 {0}
     steps:
       - name: Install MSYS
         uses: msys2/setup-msys2@v2
