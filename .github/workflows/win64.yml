@@ -16,7 +16,7 @@ jobs:
         uses: msys2/setup-msys2@v2
         with:
           update: true
-          msystem: x86_64
+          msystem: MINGW64
           install: >-
             mingw-w64-x86_64-pkg-config
             mingw-w64-x86_64-libusb
