@@ -39,7 +39,7 @@ jobs:
       - name: Get Python Version
         id: get-python-version
         run: |
-          echo "::set-output name=python-version::$(python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}')")"
+          echo "python-version=$(python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}')")" > $GITHUB_OUTPUT
       - name: Fetch python embed, unzip to ./python
         run: |
           curl -L https://www.python.org/ftp/python/${{ steps.get-python-version.outputs.python-version }}/python-${{ steps.get-python-version.outputs.python-version }}-embed-amd64.zip -o python-embed.zip
