@@ -110,7 +110,7 @@ link_directories(${GLIB_LIBDIR})
 
 if (WIN32)
 	# use python in ${CMAKE_SOURCE_DIR}/python
-	set(PY_LIB ${CMAKE_SOURCE_DIR}/python/python311.dll)
+	set(PY_LIB ${CMAKE_SOURCE_DIR}/python/python3.dll)
 	find_package(Python3 COMPONENTS Development QUIET)
 	include_directories(${Python3_INCLUDE_DIRS})
 else()
