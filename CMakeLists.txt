@@ -110,7 +110,7 @@ link_directories(${GLIB_LIBDIR})
 
 if (WIN32)
 	# use python in ${CMAKE_SOURCE_DIR}/python
-	set(PY_LIB ${CMAKE_SOURCE_DIR}/python/python3.dll)
+	set(PY_LIB ${CMAKE_SOURCE_DIR}/python/python311.dll)
 	find_package(Python3 COMPONENTS Development QUIET)
 	include_directories(${Python3_INCLUDE_DIRS})
 else()
@@ -184,19 +184,24 @@ include_directories(${ZLIB_INCLUDE_DIRS})
 #= Qt5 or Qt6
 #-------------------------------------------------------------------------------
 
-find_package(Qt5Core QUIET)
-
+find_package(Qt5Core HINTS "$ENV{QTDIR}" QUIET)
+set(BUILD_STATIC FALSE)
 if(Qt5Core_FOUND)
 	message("----- Qt5:")
 	message(STATUS "	 includes:" ${Qt5Core_INCLUDE_DIRS})
+	get_target_property(MY_QT_TARGET_TYPE Qt5::Core TYPE)
+	if(MY_QT_TARGET_TYPE STREQUAL STATIC_LIBRARY)
+		message(STATUS "Qt was built as a static library!")
+		set(BUILD_STATIC TRUE)
+	endif()
 	#find_package(Qt5WinExtras REQUIRED)
-	find_package(Qt5Widgets REQUIRED)
-	find_package(Qt5Gui REQUIRED)
-	find_package(Qt5Svg REQUIRED)
+	find_package(Qt5Widgets HINTS "$ENV{QTDIR}" REQUIRED)
+	find_package(Qt5Gui HINTS "$ENV{QTDIR}" REQUIRED)
+	find_package(Qt5Svg HINTS "$ENV{QTDIR}" REQUIRED)
 	# win32
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
 	if (WIN32)
-		find_package(Qt5WinExtras REQUIRED)
+		find_package(Qt5WinExtras HINTS "$ENV{QTDIR}" REQUIRED)
 		message(STATUS "	 libraries:" ${Qt5WinExtras_LIBRARIES})
 		set(QT_INCLUDE_DIRS ${Qt5Gui_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS} ${Qt5WinExtras_INCLUDE_DIRS} ${Qt5Svg_INCLUDE_DIRS})
 		set(QT_LIBRARIES Qt5::Gui Qt5::Widgets Qt5::WinExtras Qt5::Svg)
@@ -620,14 +625,28 @@ add_compile_options(-O3)
 #===============================================================================
 #= Linker Configuration
 #-------------------------------------------------------------------------------
+if ((WIN32) AND (BUILD_STATIC))
+	# workaround for a cmake bug, see make it lower case so it can be found
+	add_library(glib_dummy STATIC IMPORTED)
+	set_property(TARGET glib_dummy PROPERTY IMPORTED_LOCATION ${GLIB_LIBDIR}/libglib-2.0.dll.a)
+	set(GLIB_LIB glib_dummy)
 
+	# force to use dynamic version of libusb-1, so it can be replaced in the future
+	add_library(libusb_dummy STATIC IMPORTED)
+	set_property(TARGET libusb_dummy PROPERTY IMPORTED_LOCATION ${LIBUSB_1_LIBRARIES})
+	set(LIBUSB_LIB libusb_dummy)
+else()
+	set(GLIB_LIB -lglib-2.0)
+	set(LIBUSB_LIB ${LIBUSB_1_LIBRARIES})
+endif()
 
+#message(STATUS "GLIB LIB=" ${GLIB_LIB})
 set(DSVIEW_LINK_LIBS
 	-lz
-	-lglib-2.0
+	${GLIB_LIB}
 	${CMAKE_THREAD_LIBS_INIT}
 	${QT_LIBRARIES}
-	${LIBUSB_1_LIBRARIES}
+	${LIBUSB_LIB}
 	${FFTW_LIBRARIES}
 	${PY_LIB}
 )
@@ -658,7 +677,7 @@ target_link_libraries(${PROJECT_NAME} ${DSVIEW_LINK_LIBS})
 
 if(WIN32)
 # Pass -mwindows so that no "DOS box" will open when PulseView is started.
-set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "-mwindows")
+#set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "-mwindows")
 endif()
 
 if(ENABLE_COTIRE)
