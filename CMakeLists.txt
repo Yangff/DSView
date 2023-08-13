@@ -64,6 +64,10 @@ set(ENABLE_SIGNALS TRUE) #Build with UNIX signals
 set(ENABLE_COTIRE FALSE) #Enable cotire
 set(STATIC_PKGDEPS_LIBS FALSE) #Statically link to (pkg-config) libraries
 
+option(OVERRIDE_STATIC_LIBUSB "Override static libusb with dynamic libusb (only on Windows)" OFF)
+# Turn on this by default because libglib2 shipped with MSYS2 cannot be linked statically
+option(OVERRIDE_STATIC_GLIB2 "Override static libglib2 with dynamic libglib2 (only on Windows)" ON)
+
 if(WIN32)
 	# On Windows/MinGW we need to statically link to libraries.
 	# This option is user configurable, but enable it by default on win32.
@@ -627,14 +631,22 @@ add_compile_options(-O3)
 #-------------------------------------------------------------------------------
 if ((WIN32) AND (BUILD_STATIC))
 	# workaround for a cmake bug, see make it lower case so it can be found
-	add_library(glib_dummy STATIC IMPORTED)
-	set_property(TARGET glib_dummy PROPERTY IMPORTED_LOCATION ${GLIB_LIBDIR}/libglib-2.0.dll.a)
-	set(GLIB_LIB glib_dummy)
+	if (OVERRIDE_STATIC_GLIB2)
+		add_library(glib_dummy STATIC IMPORTED)
+		set_property(TARGET glib_dummy PROPERTY IMPORTED_LOCATION ${GLIB_LIBDIR}/libglib-2.0.dll.a)
+		set(GLIB_LIB glib_dummy)
+	else()
+		set(GLIB_LIB -lglib-2.0)
+	endif()
 
 	# force to use dynamic version of libusb-1, so it can be replaced in the future
-	add_library(libusb_dummy STATIC IMPORTED)
-	set_property(TARGET libusb_dummy PROPERTY IMPORTED_LOCATION ${LIBUSB_1_LIBRARIES})
-	set(LIBUSB_LIB libusb_dummy)
+	if (OVERRIDE_STATIC_LIBUSB)
+		add_library(libusb_dummy STATIC IMPORTED)
+		set_property(TARGET libusb_dummy PROPERTY IMPORTED_LOCATION ${LIBUSB_1_LIBRARIES})
+		set(LIBUSB_LIB libusb_dummy)
+	else()
+		set(LIBUSB_LIB ${LIBUSB_1_LIBRARIES})
+	endif()
 else()
 	set(GLIB_LIB -lglib-2.0)
 	set(LIBUSB_LIB ${LIBUSB_1_LIBRARIES})
