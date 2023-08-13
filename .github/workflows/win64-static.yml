@@ -48,7 +48,7 @@ jobs:
           mkdir build
           mkdir install.dir
           cd build
-          cmake .. -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_INSTALL_PREFIX=../install.dir
+          QTDIR=/mingw64/qt5-static cmake .. -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_INSTALL_PREFIX=../install.dir
           ninja
           ninja install
       - name: Package
