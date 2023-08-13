@@ -1313,19 +1313,19 @@ static int cleanup(void)
 
 static void remove_sources(struct DSL_context *devc)
 {
-    /*
+    #ifndef _WIN32
     int i;
     sr_info("%s: remove fds from polling", __func__);
     /* Remove fds from polling. */
-    /*
     for (i = 0; devc->usbfd[i] != -1; i++)
         sr_source_remove(devc->usbfd[i]);
     g_free(devc->usbfd);
-    */
+    #else
     if (devc->channel) {
         sr_session_source_remove_channel(devc->channel);
         devc->channel = NULL;
     }
+    #endif
 }
 
 static void report_overflow(struct DSL_context *devc)
@@ -1425,7 +1425,7 @@ static int dev_acquisition_start(struct sr_dev_inst *sdi, void *cb_data)
     struct DSL_context *devc;
     struct sr_usb_dev_inst *usb;
     struct drv_context *drvc;
-    // const struct libusb_pollfd **lupfd;
+    const struct libusb_pollfd **lupfd;
 	unsigned int i;
     int ret;
     struct ctl_wr_cmd wr_cmd;
@@ -1501,7 +1501,7 @@ static int dev_acquisition_start(struct sr_dev_inst *sdi, void *cb_data)
     }
 
     /* setup callback function for data transfer */
-/*
+#ifndef _WIN32
     lupfd = libusb_get_pollfds(drvc->sr_ctx->libusb_ctx);
     for (i = 0; lupfd[i]; i++);
 
@@ -1517,10 +1517,11 @@ static int dev_acquisition_start(struct sr_dev_inst *sdi, void *cb_data)
     }
     devc->usbfd[i] = -1;
     free(lupfd);
-*/
-
+#else
     sr_session_source_add_channel(devc->channel, G_IO_IN | G_IO_ERR,
 			get_usbtimeout(devc), receive_data, (void *)sdi);
+
+#endif
 
     wr_cmd.header.dest = DSL_CTL_START;
     wr_cmd.header.size = 0;

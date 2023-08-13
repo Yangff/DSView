@@ -1955,6 +1955,7 @@ SR_PRIV int dsl_dev_open(struct sr_dev_driver *di, struct sr_dev_inst *sdi, gboo
         return SR_ERR;
     }
 
+#ifdef _WIN32
     if (sdi->status == SR_ST_ACTIVE) {
         if (_pipe(devc->pipe_fds, 0x1000, 0x8000)) {
             sr_err("%s: pipe() failed", __func__);
@@ -1965,7 +1966,7 @@ SR_PRIV int dsl_dev_open(struct sr_dev_driver *di, struct sr_dev_inst *sdi, gboo
         g_io_channel_set_encoding(devc->channel, NULL, NULL);
         g_io_channel_set_buffered(devc->channel, FALSE);
     }
-
+#endif
 
     if (devc->profile->dev_caps.feature_caps & CAPS_FEATURE_MAX25_VTH) {
         ret = dsl_secuCheck(sdi, encryption, SECU_STEPS);
@@ -1997,6 +1998,7 @@ SR_PRIV int dsl_dev_close(struct sr_dev_inst *sdi)
         return SR_ERR;
     }
 
+#ifdef _WIN32
     if (sdi->status == SR_ST_ACTIVE) {
         struct DSL_context * decv = sdi->priv;
         g_io_channel_shutdown(decv->channel, FALSE, NULL);
@@ -2007,6 +2009,7 @@ SR_PRIV int dsl_dev_close(struct sr_dev_inst *sdi)
         decv->pipe_fds[0] = -1;
         decv->pipe_fds[1] = -1;
     }
+#endif
 
     sr_info("%s: Closing device %d on %d.%d interface %d.",
         sdi->driver->name, sdi->index, usb->bus, usb->address, USB_INTERFACE);
