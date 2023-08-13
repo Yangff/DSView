@@ -1,9 +1,9 @@
 name: Build Windows 64bit
 on:
   push:
-    branches: [ master, action ]
+    branches: [ master, action, nopoll ]
   pull_request:
-    branches: [ master, action ]
+    branches: [ master, action, nopoll ]
 jobs:
   build:
     name: Build
