@@ -1955,6 +1955,18 @@ SR_PRIV int dsl_dev_open(struct sr_dev_driver *di, struct sr_dev_inst *sdi, gboo
         return SR_ERR;
     }
 
+    if (sdi->status == SR_ST_ACTIVE) {
+        if (_pipe(devc->pipe_fds, 0x1000, 0x8000)) {
+            sr_err("%s: pipe() failed", __func__);
+		    return SR_ERR;
+        }
+        devc->channel = g_io_channel_unix_new(devc->pipe_fds[0]);
+        g_io_channel_set_flags(devc->channel, G_IO_FLAG_NONBLOCK, NULL);
+        g_io_channel_set_encoding(devc->channel, NULL, NULL);
+        g_io_channel_set_buffered(devc->channel, FALSE);
+    }
+
+
     if (devc->profile->dev_caps.feature_caps & CAPS_FEATURE_MAX25_VTH) {
         ret = dsl_secuCheck(sdi, encryption, SECU_STEPS);
         if (ret != SR_OK){
@@ -1983,6 +1995,17 @@ SR_PRIV int dsl_dev_close(struct sr_dev_inst *sdi)
     if (usb->devhdl == NULL){
         sr_detail("dsl_dev_close(),libusb_device_handle is null.");
         return SR_ERR;
+    }
+
+    if (sdi->status == SR_ST_ACTIVE) {
+        struct DSL_context * decv = sdi->priv;
+        g_io_channel_shutdown(decv->channel, FALSE, NULL);
+        g_io_channel_unref(decv->channel);
+        close(decv->pipe_fds[0]);
+        close(decv->pipe_fds[1]);
+        decv->channel = NULL;
+        decv->pipe_fds[0] = -1;
+        decv->pipe_fds[1] = -1;
     }
 
     sr_info("%s: Closing device %d on %d.%d interface %d.",
